@@ -4,6 +4,7 @@ import (
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/dynamodb"
     "github.com/fundrick/bets-svc/internal/bets"
+    "github.com/fundrick/bets-svc/internal/api/validators"
     "net/http"
     "github.com/gin-gonic/gin"
 )
@@ -29,6 +30,8 @@ func (uh *UserHandler) CreateUser(c *gin.Context) {
     }
 
     /* TODO, we need to move this a func to format a newUser which we need a new TYPE for */
+    validators.ValidateCreateUserRequest()
+    
     formatedUser := bets.NewUser{
         UserName: newUser.UserName, // Assuming your JSON data has a field called "UserName"
         Types:  newUser.Types,  // Assuming your JSON data has a field called "Details"
