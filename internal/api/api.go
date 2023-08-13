@@ -25,6 +25,7 @@ func Start() {
 	baseRoute.GET("/bets/user/:userName", userHandler.GetUser)
 	baseRoute.PUT("/bets/user/:userName", userHandler.ReplaceUser)
 	baseRoute.POST("bets", userHandler.CreateBet)
-	router.Run("localhost:8080")
+	baseRoute.PUT("bets/:betId", userHandler.UpdateBet)
+	router.Run(":8080")
 }
 

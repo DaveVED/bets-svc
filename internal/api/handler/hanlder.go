@@ -8,30 +8,41 @@ import (
     "github.com/gin-gonic/gin"
 
     "time"
+    "fmt"
 )
 
 type User struct {
-    UserName string `dynamodbav:"userName"`
-    UserProfileAttributes UserProfileAttributes `dynamodbav:userProfileAttributes`
+    UserName string `json:"userName"`
+    UserProfileAttributes UserProfileAttributes `json:"userProfileAttributes"`
 }
 
 type UserProfileAttributes struct {
-    DiscordUserName string `dynamodbav:"discordUsername"`
-    DiscordImageUrl string `dynamodbav:"discordImageUrl"`
-    SteamUserName   string `dynamodbav:"steamUserName"`
-    SteamUserId     string `dynamodav:"steamUserId"`
-    Wins            string `dynamodav:"wins"`
-    Losses          string `dynamodav:"losses"`
-    TopGame         string `dynamodav:"topGame"`
-    BestGame        string `dynamodav:"bestGame"`
-    WorstGame       string `dynamodav:"worstGame"`
+    DiscordUserName string `json:"discordUsername"`
+    DiscordImageUrl string `json:"discordImageUrl"`
+    SteamUserName   string `json:"steamUserName"`
+    SteamUserId     string `json:"steamUserId"`
+    Wins            string `json:"wins"`
+    Losses          string `json:"losses"`
+    TopGame         string `json:"topGame"`
+    BestGame        string `json:"bestGame"`
+    WorstGame       string `json:"worstGame"`
 }
 
 type UserBet struct {
-    InitiatorUserName string `dynamodbav:"initiatorUserName"`
-    OpponentUserName  string `dynamodbav:"opponentUserName"`
-    Game string `dynamodbav:"game"`
-    Amount string `dynamodbav:"amount"`
+    InitiatorUserName string `json:"initiatorUserName"`
+    OpponentUserName  string `json:"opponentUserName"`
+    Game string `json:"game"`
+    Amount string `json:"amount"`
+}
+
+type UserBetUpdate struct {
+    Initiator      string    `json:"initiator"`
+    Opponent       string    `json:"opponent"`
+    Status         string    `json:"status"`
+    Accepted       string    `json:"accepted"`
+    NeedsToAccept  string    `json:"needsToAccept"`
+    Winner         string    `json:"winner"`
+    UpdatedBy      string    `json:"updatedBy"`
 }
 
 type UserHandler struct {
@@ -107,10 +118,13 @@ func (uh *UserHandler) CreateBet(c *gin.Context) {
         UserName: "USER:" + newBet.InitiatorUserName,
         UserAspects: "BET:" + betId,
         Opponent: newBet.OpponentUserName,
+        Initiator: newBet.InitiatorUserName,
         Game: newBet.Game,
         Amount: newBet.Amount,
-        Status: "IN_PROGRESS",
+        Status: "PENDING",
         Winner: "",
+        NeedsToAccept: newBet.OpponentUserName,
+        Accepted: "false",
         CreatedOn: isoTime,
         CreatedBy: newBet.InitiatorUserName,
         UpdatedOn: isoTime,
@@ -121,9 +135,12 @@ func (uh *UserHandler) CreateBet(c *gin.Context) {
         UserName: "USER:" + newBet.OpponentUserName,
         UserAspects: "BET:" + betId,
         Opponent: newBet.InitiatorUserName,
+        Initiator: newBet.InitiatorUserName,
         Game: newBet.Game,
         Amount: newBet.Amount,
-        Status: "IN_PROGRESS",
+        Status: "PENDING",
+        NeedsToAccept: newBet.OpponentUserName,
+        Accepted: "false",
         Winner: "",
         CreatedOn: isoTime,
         CreatedBy: newBet.InitiatorUserName,
@@ -137,4 +154,55 @@ func (uh *UserHandler) CreateBet(c *gin.Context) {
     }
 
     c.IndentedJSON(http.StatusCreated, []bets.BetItem{formatedUserBetInitiator, formatedUserBetOpponent})
+}
+
+func (uh *UserHandler) UpdateBet(c *gin.Context) {
+    betId := c.Param("betId")
+    triggeredBy := c.Request.Header.Get("triggeredBy")
+    var newUserBet UserBetUpdate
+
+    if err := c.BindJSON(&newUserBet); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to bind user data"})
+        return
+    }
+
+    _, err := bets.GetUser(uh.DynamoDBClient, "USER:" + newUserBet.Initiator)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "User Initiator Does not exist."})
+        return
+    }
+
+    _, err = bets.GetUser(uh.DynamoDBClient, "USER:" + newUserBet.Opponent)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "User Initiator Does not exist."})
+        return
+    }
+
+    if (newUserBet.NeedsToAccept != triggeredBy) {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "You're not allowed to update this bet."})
+        return
+    }
+
+    now := time.Now()
+	isoTime := now.Format(time.RFC3339)
+    formatedInitiatorBet := bets.BetItemUpdate{
+        Winner: newUserBet.Winner,
+        Accepted: newUserBet.Accepted,
+        Status: newUserBet.Status,
+        UpdatedOn: isoTime,
+        UpdatedBy: triggeredBy,
+    }
+    bets.UpdateBet(uh.DynamoDBClient, "USER:" + newUserBet.Initiator, "BET:" + betId, formatedInitiatorBet)
+    
+    formatedOpponentBet := bets.BetItemUpdate{
+        Winner: newUserBet.Winner,
+        Accepted: newUserBet.Accepted,
+        Status: newUserBet.Status,
+        UpdatedOn: isoTime,
+        UpdatedBy: triggeredBy,
+    }
+    bets.UpdateBet(uh.DynamoDBClient, "USER:" + newUserBet.Opponent, "BET:" + betId, formatedOpponentBet)
+
+    fmt.Println(formatedOpponentBet)
+    c.IndentedJSON(http.StatusCreated, newUserBet)
 }

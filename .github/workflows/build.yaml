@@ -1,0 +1,47 @@
+on:
+  push:
+    branches:
+      - 'develop'
+      - 'main'
+
+name: Build Bets Service
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Login to Amazon ECR
+      id: ECR Login
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push the image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.ECR Login.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
+        IMAGE_TAG: latest
+        SHORT_SHA: $(git rev-parse --short $GITHUB_SHA)
+      run: |        
+        # Build the Docker image
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
+        
+        # Push the 'latest' tag to ECR
+        echo "Pushing 'latest' tag image to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        
+        # Push the short commit SHA tag to ECR
+        echo "Pushing '$SHORT_SHA' tag image to ECR..."
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA
+
+        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA"

@@ -16,12 +16,24 @@ type BetItem struct {
 	UserName string 
     UserAspects string
 	Opponent string
+    Initiator string
     Game string
+    Accepted string
     Amount string
+    NeedsToAccept string
 	Status string
 	Winner string
 	CreatedOn string
 	CreatedBy string
+	UpdatedOn string
+	UpdatedBy string
+}
+
+type BetItemUpdate struct {
+    Game string
+    Accepted string
+	Status string
+	Winner string
 	UpdatedOn string
 	UpdatedBy string
 }
@@ -40,11 +52,16 @@ type BetsUserProflieItem struct {
     WorstGame       string
 }
 
+
 type BetResponse struct {
+    BetId     string `json:"betId"`
+    Initiator string `json:"initiator"`
     Opponent  string `json:"opponent"`
     Game      string `json:"game"`
     Amount    string `json:"amount"`
     Status    string `json:"status"`
+    Accepted  string `json:"accepted"`
+    NeedsToAccept string `json:"needsToAccept"`
     Winner    string `json:"winner"`
     CreatedOn string `json:"createdOn"`
     CreatedBy string `json:"createdBy"`
@@ -59,7 +76,7 @@ type UserResponse struct {
 }
 
 type UserProfileAttributesResponse struct {
-    DiscordUserName string `json:"discordUserName"`
+    DiscordUserName string `json:"discordUsername"`
     DiscordImageUrl string `json:"discordImageUrl"`
     SteamUserName   string `json:"steamUserName"`
     SteamUserId     string `json:"steamUserId"`
@@ -118,7 +135,9 @@ func GetUser(svc *dynamodb.Client, userName string) (UserResponse, error) {
 	
     for _, v := range items {
         userAspect := v["userAspects"].(string)
-        aspectType := strings.Split(userAspect, ":")[0]
+        splitAspectType := strings.Split(userAspect, ":")
+        aspectType := splitAspectType[0]
+        aspectValue := splitAspectType[1]
         switch aspectType {
         case "PROFILE":
             userResponse.UserName = strings.Split(v["userName"].(string), ":")[1]
@@ -134,13 +153,17 @@ func GetUser(svc *dynamodb.Client, userName string) (UserResponse, error) {
                 WorstGame: v["worstGame"].(string),
             }
         case "BET":
-			fmt.Println(v)
+            fmt.Println(aspectValue)
             bet := BetResponse{
+                BetId:     aspectValue,
                 Opponent:  v["opponent"].(string),
                 Game:      v["game"].(string),
                 Amount:    v["amount"].(string),
                 Status:    v["status"].(string),
                 Winner:    v["winner"].(string),
+                NeedsToAccept: v["needsToAccept"].(string),
+                Initiator: v["initiator"].(string),
+                Accepted: v["accepted"].(string),
                 CreatedOn: v["createdOn"].(string),
                 CreatedBy: v["createdBy"].(string),
                 UpdatedOn: v["updatedOn"].(string),
@@ -199,6 +222,9 @@ func CreateBet(svc *dynamodb.Client, initiatorData BetItem, opponentData BetItem
             "userName":    &types.AttributeValueMemberS{Value: initiatorData.UserName},
             "userAspects":  &types.AttributeValueMemberS{Value: initiatorData.UserAspects},
             "opponent": &types.AttributeValueMemberS{Value: initiatorData.Opponent},
+            "initiator": &types.AttributeValueMemberS{Value: initiatorData.Initiator},
+            "accepted": &types.AttributeValueMemberS{Value: initiatorData.Accepted},
+            "needsToAccept": &types.AttributeValueMemberS{Value: initiatorData.NeedsToAccept},
 			"game": &types.AttributeValueMemberS{Value: initiatorData.Game},
 			"amount": &types.AttributeValueMemberS{Value: initiatorData.Amount},
 			"winner": &types.AttributeValueMemberS{Value: opponentData.Winner},
@@ -222,6 +248,9 @@ func CreateBet(svc *dynamodb.Client, initiatorData BetItem, opponentData BetItem
             "opponent": &types.AttributeValueMemberS{Value: opponentData.Opponent},
 			"game": &types.AttributeValueMemberS{Value: opponentData.Game},
 			"amount": &types.AttributeValueMemberS{Value: initiatorData.Amount},
+            "initiator": &types.AttributeValueMemberS{Value: initiatorData.Initiator},
+            "accepted": &types.AttributeValueMemberS{Value: initiatorData.Accepted},
+            "needsToAccept": &types.AttributeValueMemberS{Value: initiatorData.NeedsToAccept},
 			"winner": &types.AttributeValueMemberS{Value: opponentData.Winner},
 			"status": &types.AttributeValueMemberS{Value: opponentData.Status},
             "createdOn": &types.AttributeValueMemberS{Value: opponentData.CreatedOn},
@@ -236,6 +265,42 @@ func CreateBet(svc *dynamodb.Client, initiatorData BetItem, opponentData BetItem
 	}
 	return nil
 }
+
+
+func UpdateBet(svc *dynamodb.Client, userName string, betId string, data BetItemUpdate) error {
+	key := map[string]types.AttributeValue{
+		"userName":    &types.AttributeValueMemberS{Value: userName},
+		"userAspects": &types.AttributeValueMemberS{Value: betId},
+	}	
+
+    // Modify the update expression to exclude userAspects
+    updateExpression := "SET winner = :winner, #Status = :status, accepted = :accepted, updatedBy = :updatedBy, updatedOn = :updatedOn"
+    
+    attributeValues := map[string]types.AttributeValue{
+        ":winner": &types.AttributeValueMemberS{Value: data.Winner},
+        ":status": &types.AttributeValueMemberS{Value: data.Status},
+        ":accepted": &types.AttributeValueMemberS{Value: data.Accepted},
+        ":updatedBy": &types.AttributeValueMemberS{Value: data.UpdatedBy},
+        ":updatedOn": &types.AttributeValueMemberS{Value: data.UpdatedOn},
+    }
+
+    _, err := svc.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+        TableName:        aws.String("bets-dev-table"),
+        Key:              key,
+        UpdateExpression: aws.String(updateExpression),
+        ExpressionAttributeNames: map[string]string{
+            "#Status": "status",
+        },
+        ExpressionAttributeValues: attributeValues,
+    })
+
+    if err != nil {
+        return fmt.Errorf("failed to update user: %w", err)
+    }
+
+    return nil
+}
+
 
 func CreateDynamoDBClient() (*dynamodb.Client, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
