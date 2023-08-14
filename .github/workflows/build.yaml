@@ -23,16 +23,18 @@ jobs:
         aws-region: us-east-1
 
     - name: Login to Amazon ECR
-      id: ecr_login
+      id: ECR_Login  # <-- Change here
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push the image to Amazon ECR
       env:
-        ECR_REGISTRY: ${{ steps.ECR ecr_login.outputs.registry }}
+        ECR_REGISTRY: ${{ steps.ECR_Login.outputs.registry }}  # <-- Change here
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
         IMAGE_TAG: latest
-        SHORT_SHA: $(git rev-parse --short $GITHUB_SHA)
-      run: |        
+      run: |
+        # Get the short commit SHA
+        SHORT_SHA=$(git rev-parse --short $GITHUB_SHA)
+        
         # Build the Docker image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
         
