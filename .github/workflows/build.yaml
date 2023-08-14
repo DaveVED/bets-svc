@@ -31,10 +31,8 @@ jobs:
         ECR_REGISTRY: ${{ steps.ECR_Login.outputs.registry }}  # <-- Change here
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
         IMAGE_TAG: latest
-      run: |
-        # Get the short commit SHA
-        SHORT_SHA=$(git rev-parse --short $GITHUB_SHA)
-        
+        SHORT_SHA: $(git rev-parse --short $GITHUB_SHA)
+      run: |        
         # Build the Docker image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
         
