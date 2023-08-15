@@ -4,6 +4,7 @@ import (
     "github.com/aws/aws-sdk-go-v2/service/dynamodb"
     "github.com/fundrick/bets-svc/internal/bets"
     "github.com/fundrick/bets-svc/internal/modals"
+    "github.com/fundrick/bets-svc/internal/api/fmt"
     "net/http"
     "github.com/gin-gonic/gin"
 )
@@ -58,9 +59,11 @@ func (uh *UserHandler) GetUser(c *gin.Context) {
         return
     }
 
-    c.IndentedJSON(http.StatusOK, user)
-}
+    formatedUser := fmt.FormatGetUserResponse(user)
 
-func (uh *UserHandler) ReplaceUser(c *gin.Context) {
-    c.IndentedJSON(http.StatusOK, "HELLO WORLD")
+    response := modals.SuccessResponse{
+        Data: formatedUser,
+    }
+
+    c.IndentedJSON(http.StatusOK, response)
 }

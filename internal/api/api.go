@@ -20,15 +20,16 @@ func Start() {
 	}
 
 	router.Use(middleware.CORSMiddleware())
-	router.Use(middleware.ClientAuth())
+	//router.Use(middleware.ClientAuth())
 	
 	userHandler := handler.NewUserHandler(client)
     baseRoute := router.Group("/v1/bets")
 
+	baseRoute.GET("/health", userHandler.GetHealth)
+	
 	// user endpoints
 	baseRoute.POST("/user", userHandler.CreateUser)
 	baseRoute.GET("/user/:userName", userHandler.GetUser)
-	baseRoute.PUT("/user/:userName", userHandler.ReplaceUser)
 
 	// bet endpoints
 	baseRoute.POST("/user/bet", userHandler.CreateBet)
