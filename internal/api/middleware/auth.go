@@ -20,8 +20,8 @@ type SecretData struct {
 
 func ClientAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		secretName := os.Getenv("AWS_SECRET_NAME")
-		region := os.Getenv("AWS_REGION")
+		secretName := "clients/creds/bets-ui"
+		region := "us-east-1"
 
 		cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 		if err != nil {
