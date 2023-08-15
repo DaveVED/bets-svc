@@ -66,7 +66,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: $DEV_ECS_TASK_FAMILY 
+          container-name: bets-svc
           image: ${{ steps.build-image.outputs.image }}
 
       # Deploy the updated task definition to Amazon ECS
