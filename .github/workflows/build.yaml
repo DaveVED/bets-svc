@@ -49,10 +49,12 @@ jobs:
                 
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA"
 
-    - name: Download task definition
+    - name: Describe task definition
       run: |
-        echo "$DEV_ECS_TASK_FAMILY"
-        aws ecs describe-task-definition --task-definition "$DEV_ECS_TASK_FAMILY" --query taskDefinition > task-definition.json    
+        printenv
+        echo "Using task definition: $DEV_ECS_TASK_FAMILY"
+        aws ecs describe-task-definition --task-definition $DEV_ECS_TASK_FAMILY
+
     
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
