@@ -20,7 +20,7 @@ jobs:
       DEV_ECS_TASK_FAMILY: ${{ secrets.DEV_ECS_TASK_FAMILY }}
       DEV_ECS_SERVICE: ${{ secrets.DEV_ECS_SERVICE }}
       DEV_ECS_CLUSTER: ${{ secrets.DEV_ECS_CLUSTER }}
-
+      DEV_TASK_DEF_CONTAINER_NAME: ${{ secrets.DEV_TASK_DEF_CONTAINER_NAME }}
     steps:
       # Checkout the current repository
       - name: Checkout
@@ -66,7 +66,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: bets-svc
+          container-name: $DEV_TASK_DEF_CONTAINER_NAME
           image: ${{ steps.build-image.outputs.image }}
 
       # Deploy the updated task definition to Amazon ECS
