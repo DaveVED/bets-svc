@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.33
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.36
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.21.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.3.0
 )

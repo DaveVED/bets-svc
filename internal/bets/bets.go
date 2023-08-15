@@ -153,7 +153,6 @@ func GetUser(svc *dynamodb.Client, userName string) (UserResponse, error) {
                 WorstGame: v["worstGame"].(string),
             }
         case "BET":
-            fmt.Println(aspectValue)
             bet := BetResponse{
                 BetId:     aspectValue,
                 Opponent:  v["opponent"].(string),
