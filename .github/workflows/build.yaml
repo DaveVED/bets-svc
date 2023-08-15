@@ -27,6 +27,7 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build, tag, and push the image to Amazon ECR
+      id: build-image
       env:
         ECR_REGISTRY: ${{ steps.ECR_Login.outputs.registry }}  # <-- Change here
         ECR_REPOSITORY: ${{ secrets.REPO_NAME }}
@@ -45,5 +46,21 @@ jobs:
         # Push the short commit SHA tag to ECR
         echo "Pushing '$SHORT_SHA' tag image to ECR..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA
+                
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA" >> $GITHUB_OUTPUT
+    
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: my-container
+        image: ${{ steps.build-image.outputs.image }}
 
-        echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA"
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: $DEV_ECS_SERVICE
+        cluster: $DEV_ECS_CLUSTER
+        wait-for-service-stability: true
