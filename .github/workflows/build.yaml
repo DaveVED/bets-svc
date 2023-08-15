@@ -51,8 +51,8 @@ jobs:
 
     - name: Download task definition
       run: |
-        echo $DEV_ECS_TASK_FAMILY
-        aws ecs describe-task-definition --task-definition $DEV_ECS_TASK_FAMILY --query taskDefinition > task-definition.json    
+        echo ${DEV_ECS_TASK_FAMILY}
+        aws ecs describe-task-definition --task-definition ${DEV_ECS_TASK_FAMILY} --query taskDefinition > task-definition.json    
     
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
