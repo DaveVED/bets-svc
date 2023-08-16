@@ -19,7 +19,7 @@ func Start() {
 	}
 
 	router.Use(middleware.CORSMiddleware())
-	router.Use(middleware.ClientAuth())
+	//router.Use(middleware.ClientAuth())
 	
 	// Bets Endpoints... 
 	userHandler := handler.NewUserHandler(client)

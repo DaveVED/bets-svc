@@ -19,12 +19,6 @@ type SecretData struct {
 
 func ClientAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		if c.FullPath() == "/v1/bets/health" {
-			c.Next()
-			return
-		}
-
 		secretName := "clients/creds/bets-ui"
 		region := "us-east-1"
 
