@@ -50,3 +50,7 @@ type UserProfileAttributesResponse struct {
     BestGame        string `json:"bestGame"`
     WorstGame       string `json:"worstGame"`
 }
+
+type UsersResponse struct {
+    UserNames []string `json:"userNames, omitempty"`
+}

@@ -50,3 +50,15 @@ func FormatGetUserResponse(user []map[string]interface{}) modals.UserResponse {
 
 	return userResponse
 }
+
+func FormatUersResponse(users []map[string]interface{}) modals.UsersResponse {
+	var usersResponse modals.UsersResponse
+
+	for _, userData := range users {
+		user := userData["userName"].(string)
+		formatedUser := strings.Split(user, ":")[1]
+		usersResponse.UserNames = append(usersResponse.UserNames, formatedUser)
+	}
+
+	return usersResponse
+}

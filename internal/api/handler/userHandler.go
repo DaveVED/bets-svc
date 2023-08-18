@@ -7,8 +7,7 @@ import (
     "github.com/fundrick/bets-svc/internal/api/fmt"
     "net/http"
     "github.com/gin-gonic/gin"
-
-    "log"
+    
 )
 
 type UserHandler struct {
@@ -78,6 +77,11 @@ func (uh *UserHandler) GetUsers(c *gin.Context) {
         return
     }
 
-    log.Println(users)
-    c.IndentedJSON(http.StatusOK, "OK")
+    foramtedUsers := fmt.FormatUersResponse(users)
+
+    response := modals.SuccessResponse{
+        Data: foramtedUsers,
+    }
+
+    c.IndentedJSON(http.StatusOK, response)
 }
