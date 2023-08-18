@@ -29,6 +29,7 @@ func Start() {
 	
 	// user endpoints
 	baseRoute.POST("/user", userHandler.CreateUser)
+	baseRoute.GET("/users", userHandler.GetUsers)
 	baseRoute.GET("/user/:userName", userHandler.GetUser)
 
 	// bet endpoints

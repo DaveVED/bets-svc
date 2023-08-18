@@ -99,6 +99,23 @@ func GetUser(svc *dynamodb.Client, userName string) ([]map[string]interface{}, e
 	return items, nil
 }
 
+func GetUsers(svc *dynamodb.Client) (*dynamodb.ScanOutput, error) {
+	input := &dynamodb.ScanInput{
+		TableName:            aws.String("bets-dev-table"),
+		ProjectionExpression: aws.String("userNames"), // Primary key attribute name
+		FilterExpression:     aws.String("attribute_exists(userNames)"),
+	}
+
+	// Perform the scan operation
+	result, err := svc.Scan(context.TODO(), input)
+	if err != nil {
+        fmt.Println(err)
+		return nil, fmt.Errorf("failed to get users: %w", err)
+	}
+
+	return result, nil
+}
+
 func CreateBet(svc *dynamodb.Client, initiatorData BetItem, opponentData BetItem) error {
     _, err1 := svc.PutItem(context.TODO(), &dynamodb.PutItemInput{
         TableName: aws.String("bets-dev-table"),

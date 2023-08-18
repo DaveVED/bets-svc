@@ -7,6 +7,8 @@ import (
     "github.com/fundrick/bets-svc/internal/api/fmt"
     "net/http"
     "github.com/gin-gonic/gin"
+
+    "log"
 )
 
 type UserHandler struct {
@@ -66,4 +68,16 @@ func (uh *UserHandler) GetUser(c *gin.Context) {
     }
 
     c.IndentedJSON(http.StatusOK, response)
+}
+
+func (uh *UserHandler) GetUsers(c *gin.Context) {
+
+    users, err := bets.GetUsers(uh.DynamoDBClient)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user"})
+        return
+    }
+
+    log.Println(users)
+    c.IndentedJSON(http.StatusOK, "OK")
 }
