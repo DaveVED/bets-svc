@@ -42,7 +42,7 @@ func (uh *UserHandler) CreateBet(c *gin.Context) {
     formatedUserBetOpponent := bets.BetItem{
         UserName: "USER:" + newBet.OpponentUserName,
         UserAspects: "BET:" + betId,
-        Opponent: newBet.InitiatorUserName,
+        Opponent: newBet.OpponentUserName,
         Initiator: newBet.InitiatorUserName,
         Game: newBet.Game,
         Amount: newBet.Amount,

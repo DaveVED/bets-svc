@@ -159,7 +159,8 @@ func UpdateBet(svc *dynamodb.Client, userName string, betId string, data BetItem
 
     // Modify the update expression to exclude userAspects
     updateExpression := "SET winner = :winner, #Status = :status, accepted = :accepted, updatedBy = :updatedBy, updatedOn = :updatedOn"
-    
+    fmt.Println("BetID: " + betId)
+    fmt.Println("USER: " + userName)
     attributeValues := map[string]types.AttributeValue{
         ":winner": &types.AttributeValueMemberS{Value: data.Winner},
         ":status": &types.AttributeValueMemberS{Value: data.Status},
@@ -179,6 +180,7 @@ func UpdateBet(svc *dynamodb.Client, userName string, betId string, data BetItem
     })
 
     if err != nil {
+        fmt.Println("HERE")
         return fmt.Errorf("failed to update user: %w", err)
     }
 

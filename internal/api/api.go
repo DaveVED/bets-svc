@@ -33,7 +33,7 @@ func Start() {
 
 	// bet endpoints
 	baseRoute.POST("/user/bet", userHandler.CreateBet)
-	baseRoute.PUT("/user/bets/:betId", userHandler.UpdateBet)
+	baseRoute.PUT("/user/bet/:betId", userHandler.UpdateBet)
 	
 	router.Run()
 }
